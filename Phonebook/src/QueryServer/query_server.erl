@@ -28,13 +28,13 @@ init([]) ->
     {ok, #query_server_state{}}.
 
 
-handle_call({query_database, NameQuery, AddressQuery, AdditionalQuery}, {Pid, _}, State = #query_server_state{}) ->
+handle_call({query_database, NameQuery, AddressQuery, AdditionalQuery}, _From, State = #query_server_state{}) ->
     QueryResult = [rpc:call(Node, phonebook_server, query_database, [NameQuery, AddressQuery,
-        AdditionalQuery]) || Node <- nodes(), Node =/= node(Pid)],
+        AdditionalQuery]) || Node <- nodes()],
     {reply, lists:filter(fun(Elem) -> filter_result(Elem) end, QueryResult), State};
 
-handle_call({get_one_person, Phone}, {Pid, _}, State = #query_server_state{})->
-    QueryResult = [rpc:call(Node, phonebook_server, get_one_person, [Phone]) || Node <- nodes(), Node =/= node(Pid)],
+handle_call({get_one_person, Phone}, _From, State = #query_server_state{})->
+    QueryResult = [rpc:call(Node, phonebook_server, get_one_person, [Phone]) || Node <- nodes()],
     {reply, lists:filter(fun(Elem) -> filter_result(Elem) end, QueryResult), State}.
 
 
@@ -52,7 +52,7 @@ terminate(_Reason, _State = #query_server_state{}) ->
 
 filter_result(Result)->
     case Result of
-        [#person{}] -> true;
+        [#person{} | _] -> true;
         _ -> false
     end.
 
