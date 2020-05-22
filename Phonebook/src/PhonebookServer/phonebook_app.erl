@@ -24,5 +24,4 @@ stop()->
     application:stop(?MODULE).
 
 stop(_State) ->
-    mnesia:stop(),
     ok.
