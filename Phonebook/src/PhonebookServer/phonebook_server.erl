@@ -15,6 +15,7 @@
 -record(phonebook_server_state, {}).
 
 -define(SERVER, ?MODULE).
+-define(QUERY_SERVER, 'query_server@LAPTOP-7TT223E8').
 
 %%%===================================================================
 %%% Spawning and gen_server implementation
@@ -54,6 +55,7 @@ handle_cast(stop, _State = #phonebook_server_state{})->
 
 terminate(_Reason, _State = #phonebook_server_state{}) ->
     phonebook_logic:close(),
+    erlang:disconnect_node(?QUERY_SERVER),
     io:format("===== Server Closed =====\n"),
     ok.
 

@@ -10,14 +10,18 @@
 
 -export([start/2, stop/1, start/0, stop/0]).
 
+-define(QUERY_SERVER, 'query_server@LAPTOP-7TT223E8').
+
+
 start()->
-    application:start(phonebook_app).
+    application:start(?MODULE).
 
 start(_StartType, _StartArgs) ->
+   net_adm:ping(?QUERY_SERVER),
    phonebook_supervisor:start_link().
 
 stop()->
-    application:stop(phonebook_app).
+    application:stop(?MODULE).
 
 stop(_State) ->
     mnesia:stop(),
