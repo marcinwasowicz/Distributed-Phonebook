@@ -9,11 +9,12 @@
 {application, phonebook_app, [
     {description, ""},
     {vsn, "1"},
-    {registered, []},
+    {registered, [phonebook_server, phonebook_supervisor]},
     {applications, [
         kernel,
         stdlib
     ]},
     {mod, {phonebook_app, []}},
-    {env, []}
+    {env, []},
+    {modules, [phonebook_app, phonebook_supervisor, phonebook_server, phonebook_logic]}
 ]}.
