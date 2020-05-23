@@ -9,11 +9,12 @@
 {application, query_app, [
     {description, ""},
     {vsn, "1"},
-    {registered, []},
+    {registered, [query_server, query_supervisor]},
     {applications, [
         kernel,
         stdlib
     ]},
     {mod, {query_app, []}},
-    {env, []}
+    {env, []},
+    {modules, [query_app, query_supervisor, query_server]}
 ]}.
