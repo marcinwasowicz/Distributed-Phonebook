@@ -29,13 +29,14 @@ init([]) ->
 
 
 handle_call({query_database, NameQuery, AddressQuery, AdditionalQuery}, _From, State = #query_server_state{}) ->
-    QueryResult = [rpc:call(Node, phonebook_server, query_database, [NameQuery, AddressQuery,
-        AdditionalQuery]) || Node <- nodes()],
-    {reply, lists:filter(fun(Elem) -> filter_result(Elem) end, QueryResult), State};
+    {QueryResult, _} = rpc:multicall(nodes(), phonebook_server, query_database,
+        [NameQuery, AddressQuery, AdditionalQuery]),
+    {reply, lists:filter(fun(El) -> filter_result(El) end, QueryResult), State};
+
 
 handle_call({get_one_person, Phone}, _From, State = #query_server_state{})->
-    QueryResult = [rpc:call(Node, phonebook_server, get_one_person, [Phone]) || Node <- nodes()],
-    {reply, lists:filter(fun(Elem) -> filter_result(Elem) end, QueryResult), State}.
+    {QueryResult, _} = rpc:multicall(nodes(), phonebook_server, get_one_person, [Phone]),
+    {reply, lists:filter(fun(El) -> filter_result(El) end, QueryResult), State}.
 
 
 handle_cast(stop, _State = #query_server_state{})->
