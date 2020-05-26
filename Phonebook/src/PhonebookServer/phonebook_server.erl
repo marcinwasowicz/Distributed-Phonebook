@@ -10,7 +10,7 @@
 
 -export([start_link/0, init/1, handle_call/3, handle_cast/2,terminate/2]).
 -export([add_record/4, add_record_safe_mode/4, delete_record/1, delete_record_safe_mode/1]).
--export([get_one_person/1, query_database/3, stop/0]).
+-export([get_one_person/1, query_database/1, query_database/2, stop/0]).
 
 -record(phonebook_server_state, {}).
 
@@ -33,8 +33,11 @@ init([]) ->
 handle_call({get_one_person, Phone}, _From, State = #phonebook_server_state{}) ->
     {reply, phonebook_logic:get_one_person(Phone), State};
 
-handle_call({query_database, NameQuery, AddressQuery, AdditionalQuery}, _From, State = #phonebook_server_state{}) ->
-    {reply, phonebook_logic:query_database(NameQuery, AddressQuery, AdditionalQuery), State};
+handle_call({query_database, Queries}, _From, State = #phonebook_server_state{}) ->
+    {reply, phonebook_logic:query_database(Queries), State};
+
+handle_call({query_database, PositiveQueries, NegativeQueries}, _From, State = #phonebook_server_state{}) ->
+    {reply, phonebook_logic:query_database(PositiveQueries, NegativeQueries), State};
 
 handle_call({add_record_safe_mode, Phone, Name, Address, AdditionalData},_From, State = #phonebook_server_state{}) ->
     {reply, phonebook_logic:add_record_safe_mode(Phone, Name, Address, AdditionalData), State};
@@ -49,8 +52,8 @@ handle_call({delete_record, Phone},_From, State = #phonebook_server_state{}) ->
     {reply, phonebook_logic:delete_record(Phone), State}.
 
 
-handle_cast(stop, _State = #phonebook_server_state{})->
-    {stop, normal, _State}.
+handle_cast(stop, State = #phonebook_server_state{})->
+    {stop, normal, State}.
 
 
 terminate(_Reason, _State = #phonebook_server_state{}) ->
@@ -66,8 +69,11 @@ terminate(_Reason, _State = #phonebook_server_state{}) ->
 get_one_person(Phone)->
     gen_server:call(?SERVER, {get_one_person, Phone}).
 
-query_database(NameQuery, AddressQuery, AdditionalQuery)->
-    gen_server:call(?SERVER, {query_database, NameQuery, AddressQuery, AdditionalQuery}).
+query_database(Queries)->
+    gen_server:call(?SERVER, {query_database, Queries}).
+
+query_database(PositiveQueries, NegativeQueries)->
+    gen_server:call(?SERVER, {query_database, PositiveQueries, NegativeQueries}).
 
 add_record(Phone, Name, Address, AdditionalData)->
     gen_server:call(?SERVER, {add_record, Phone, Name, Address, AdditionalData}).
@@ -84,7 +90,3 @@ delete_record_safe_mode(Phone)->
 
 stop()->
     gen_server:cast(?SERVER, stop).
-
-
-
-

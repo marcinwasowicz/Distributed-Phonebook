@@ -10,7 +10,8 @@
 -author("marci").
 
 %% API
--export([start_session/0, end_session/0,get_one_person/1, query_database/3]).
+-export([start_session/0, end_session/0,get_one_person/1]).
+-export([query_database/1, query_database/2]).
 
 -define(QUERY_SERVER, 'query_server@LAPTOP-7TT223E8').
 
@@ -23,7 +24,11 @@ end_session()->
 get_one_person(Phone)->
     rpc:call(?QUERY_SERVER, query_server, get_one_person, [Phone]).
 
-query_database(Name, Address, Additional)->
-    rpc:call(?QUERY_SERVER, query_server, query_database, [Name, Address, Additional]).
+query_database(Queries)->
+    rpc:call(?QUERY_SERVER, query_server, query_database, [Queries]).
+
+query_database(PositiveQueries, NegativeQueries)->
+    rpc:call(?QUERY_SERVER, query_server, query_database, [PositiveQueries, NegativeQueries]).
+
 
 

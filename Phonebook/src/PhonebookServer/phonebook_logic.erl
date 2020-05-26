@@ -12,18 +12,19 @@
 
 %% API
 -export([create_database/0, drop_database/0, add_record/4, add_record_safe_mode/4, delete_record/1]).
--export([delete_record_safe_mode/1,get_one_person/1, init_database/0, close/0, query_database/3, match_maps/2]).
+-export([delete_record_safe_mode/1,get_one_person/1, init_database/0, close/0]).
+-export([match_maps/3, query_database/2, query_database/1]).
 
 -record(person, {phone, name, address, additional_data}).
 
-match_maps(Pattern, Map)->
+match_maps(Pattern, Map, StartAcc)->
     Predicate = fun(K, V, Acc) ->
         case Map of
-            #{K := V} -> Acc and true;
-            _ -> Acc and false
+            #{K := V} -> Acc;
+            _ -> not StartAcc
         end
      end,
-     maps:fold(Predicate, true, Pattern).
+     maps:fold(Predicate, StartAcc, Pattern).
 
 init_database()->
     mnesia:start(),
@@ -75,13 +76,29 @@ get_one_person(Phone)->
         end),
     List.
 
-query_database(NameQuery, AddressQuery, AdditionalQuery)->
+query_database([NameQuery, AddressQuery, AdditionalQuery])->
     RunQuery =
         fun()->
             Query = qlc:q([Person || Person <- mnesia:table(person),
-                match_maps(NameQuery, Person#person.name),
-                match_maps(AddressQuery, Person#person.address),
-                match_maps(AdditionalQuery, Person#person.additional_data)]),
+                match_maps(NameQuery, Person#person.name, true),
+                match_maps(AddressQuery, Person#person.address, true),
+                match_maps(AdditionalQuery, Person#person.additional_data, true)]),
+            qlc:e(Query)
+        end,
+    {_, List} = mnesia:transaction(RunQuery),
+    List.
+
+query_database([NameQueryPositive, AddressQueryPositive, AdditionalQueryPositive],
+    [NameQueryNegative, AddressQueryNegative, AdditionalQueryNegative])->
+    RunQuery =
+        fun()->
+            Query = qlc:q([Person || Person <- mnesia:table(person),
+                match_maps(NameQueryPositive, Person#person.name, true),
+                match_maps(AddressQueryPositive, Person#person.address, true),
+                match_maps(AdditionalQueryPositive, Person#person.additional_data, true),
+                match_maps(NameQueryNegative, Person#person.name, false),
+                match_maps(AddressQueryNegative, Person#person.address, false),
+                match_maps(AdditionalQueryNegative, Person#person.additional_data, false)]),
             qlc:e(Query)
         end,
     {_, List} = mnesia:transaction(RunQuery),
@@ -92,8 +109,3 @@ drop_database()->
 
 close()->
     mnesia:stop().
-
-
-
-
-

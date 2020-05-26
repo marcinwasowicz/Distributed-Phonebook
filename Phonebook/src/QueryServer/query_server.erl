@@ -9,7 +9,7 @@
 -behaviour(gen_server).
 
 -export([start_link/0,init/1, handle_call/3, handle_cast/2,terminate/2]).
--export([get_one_person/1, query_database/3, stop/0, filter_result/1]).
+-export([get_one_person/1, query_database/1, query_database/2, stop/0, filter_result/1]).
 
 -define(SERVER, ?MODULE).
 
@@ -28,11 +28,13 @@ init([]) ->
     {ok, #query_server_state{}}.
 
 
-handle_call({query_database, NameQuery, AddressQuery, AdditionalQuery}, _From, State = #query_server_state{}) ->
-    {QueryResult, _} = rpc:multicall(nodes(), phonebook_server, query_database,
-        [NameQuery, AddressQuery, AdditionalQuery]),
+handle_call({query_database, Queries}, _From, State = #query_server_state{}) ->
+    {QueryResult, _} = rpc:multicall(nodes(), phonebook_server, query_database, [Queries]),
     {reply, lists:filter(fun(El) -> filter_result(El) end, QueryResult), State};
 
+handle_call({query_database, PositiveQueries, NegativeQueries}, _From, State = #query_server_state{}) ->
+    {QueryResult, _} = rpc:multicall(nodes(), phonebook_server, query_database, [PositiveQueries, NegativeQueries]),
+    {reply, lists:filter(fun(El) -> filter_result(El) end, QueryResult), State};
 
 handle_call({get_one_person, Phone}, _From, State = #query_server_state{})->
     {QueryResult, _} = rpc:multicall(nodes(), phonebook_server, get_one_person, [Phone]),
@@ -59,8 +61,11 @@ filter_result(_Result)->
 get_one_person(Phone)->
     gen_server:call(?SERVER, {get_one_person, Phone}).
 
-query_database(NameQuery, AddressQuery, AdditionalQuery)->
-    gen_server:call(?SERVER, {query_database, NameQuery, AddressQuery, AdditionalQuery}).
+query_database(Queries)->
+    gen_server:call(?SERVER, {query_database, Queries}).
+
+query_database(PositiveQueries, NegativeQueries)->
+    gen_server:call(?SERVER, {query_database, PositiveQueries, NegativeQueries}).
 
 stop()->
     gen_server:cast(?SERVER, stop).
