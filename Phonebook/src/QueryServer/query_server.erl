@@ -51,11 +51,10 @@ terminate(_Reason, _State = #query_server_state{}) ->
 %%% Internal functions
 %%%===================================================================
 
-filter_result(Result)->
-    case Result of
-        [#person{} | _] -> true;
-        _ -> false
-    end.
+filter_result([#person{} | _])->
+    true;
+filter_result(_Result)->
+    false.
 
 get_one_person(Phone)->
     gen_server:call(?SERVER, {get_one_person, Phone}).
