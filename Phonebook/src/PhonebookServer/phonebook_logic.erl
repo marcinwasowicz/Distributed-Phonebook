@@ -96,8 +96,8 @@ query_database([NameQueryPositive, AddressQueryPositive, AdditionalQueryPositive
                 match_maps(NameQueryPositive, Person#person.name, true),
                 match_maps(AddressQueryPositive, Person#person.address, true),
                 match_maps(AdditionalQueryPositive, Person#person.additional_data, true),
-                match_maps(NameQueryNegative, Person#person.name, false),
-                match_maps(AddressQueryNegative, Person#person.address, false),
+                match_maps(NameQueryNegative, Person#person.name, false) or
+                match_maps(AddressQueryNegative, Person#person.address, false) or
                 match_maps(AdditionalQueryNegative, Person#person.additional_data, false)]),
             qlc:e(Query)
         end,
